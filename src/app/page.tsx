@@ -27,14 +27,14 @@ export default async function HomePage() {
         {habits.length > 0 && (
           <section className="mt-12 p-6 bg-card rounded-lg shadow-md">
             <div className="flex flex-col md:flex-row items-center gap-6">
-              <Image 
+              {/* <Image 
                 src="https://placehold.co/200x150.png" 
                 alt="Motivational visual" 
                 width={200} 
                 height={150} 
                 className="rounded-lg object-cover"
                 data-ai-hint="growth plant"
-              />
+              /> */}
               <div>
                 <h3 className="text-xl font-headline font-semibold text-primary mb-2">Keep Up The Great Work!</h3>
                 <p className="text-muted-foreground">

@@ -15,3 +15,8 @@ export interface HabitWithProgress extends Habit {
   weeklyCompletions: HabitCompletion[]; // Completions for the current week
   allCompletions: HabitCompletion[]; // All completions for AI insights
 }
+
+export interface StoreState {
+  habits: Habit[];
+  completions: HabitCompletion[];
+}

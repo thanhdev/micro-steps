@@ -1,28 +1,31 @@
-import type { Habit, HabitCompletion } from './types';
+import type { Habit, HabitCompletion, StoreState } from './types';
 import { getTodayDateString, getStartOfWeekDate, getDatesOfWeek } from './dateUtils';
+import { saveState, loadState } from './indexedDb';
 
-interface AppState {
-  habits: Habit[];
-  completions: HabitCompletion[];
-}
 
 // Ensure store is only initialized once
-let storeInstance: AppState | null = null;
+let storeInstance: StoreState | null = null;
 
-function getStore(): AppState {
-  if (storeInstance === null) {
+function getStore(): StoreState {
+  if (storeInstance === null) { // This function is now synchronous for the initial access
     storeInstance = {
+      // Provide default state immediately while async load happens
+      // The async load will update this state if data exists
+      // A more robust solution might show a loading state or block UI
       habits: [
-        { id: '1', name: 'Drink 8 glasses of water', createdAt: new Date().toISOString(), reminderTime: '09:00' },
-        { id: '2', name: 'Read 10 pages of a book', createdAt: new Date().toISOString(), reminderTime: '20:00' },
-        { id: '3', name: 'Meditate for 5 minutes', createdAt: new Date().toISOString() },
+        { id: '1', name: 'Wake up on time', createdAt: new Date().toISOString(), reminderTime: '06:00' },
+        { id: '2', name: 'Exercise for 1 minute', createdAt: new Date().toISOString(), reminderTime: '06:00' },
+        { id: '3', name: 'Read 10 pages of a book', createdAt: new Date().toISOString(), reminderTime: '20:00' },
       ],
-      completions: [
-        { habitId: '1', date: getTodayDateString() },
-        { habitId: '1', date: new Date(Date.now() - 86400000).toISOString().split('T')[0] }, // Yesterday
-        { habitId: '2', date: getTodayDateString() },
-      ],
+      completions: [],
     };
+    // Start async loading of state from IndexedDB
+    loadState().then(loadedState => {
+      if (loadedState) {
+        storeInstance = loadedState;
+        console.log("State loaded from IndexedDB");
+      }
+    });
   }
   return storeInstance;
 }
@@ -41,6 +44,7 @@ export async function addHabitStore(name: string, reminderTime?: string): Promis
     reminderTime,
   };
   getStore().habits.push(newHabit);
+  await saveState(getStore());
   return newHabit;
 }
 
@@ -50,11 +54,13 @@ export async function updateHabitStore(habitId: string, name: string, reminderTi
   const updatedHabit = { ...getStore().habits[habitIndex], name, reminderTime: reminderTime ?? undefined };
   getStore().habits[habitIndex] = updatedHabit;
   return updatedHabit;
+  await saveState(getStore());
 }
 
 export async function deleteHabitStore(habitId: string): Promise<void> {
   getStore().habits = getStore().habits.filter(h => h.id !== habitId);
   getStore().completions = getStore().completions.filter(c => c.habitId !== habitId);
+  await saveState(getStore());
 }
 
 // Completion functions
@@ -70,10 +76,13 @@ export async function toggleHabitCompletionStore(habitId: string, date: string):
   const existingCompletionIndex = getStore().completions.findIndex(c => c.habitId === habitId && c.date === date);
   if (existingCompletionIndex !== -1) {
     getStore().completions.splice(existingCompletionIndex, 1);
+    await saveState(getStore());
     return false; // Was completed, now not
   } else {
     getStore().completions.push({ habitId, date });
+    await saveState(getStore());
     return true; // Was not completed, now is
+
   }
 }
 
@@ -107,4 +116,6 @@ export async function getAllCompletionsData(): Promise<{ habitName: string, date
 }
 
 // Initialize store when module is loaded (simulates app startup)
-getStore();
+// The initial call now happens implicitly when module is imported,
+// triggering the async load within getStore. No explicit call needed here.
+
