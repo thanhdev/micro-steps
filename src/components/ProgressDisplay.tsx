@@ -1,6 +1,7 @@
 'use client';
 
 import type { HabitCompletion } from '@/lib/types';
+import { format } from 'date-fns';
 import { getDatesOfWeek, formatToDayOfWeek, getTodayDateString } from '@/lib/dateUtils';
 import { CheckCircle2, Circle, CalendarDays } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
@@ -16,7 +17,7 @@ export function ProgressDisplay({ completionsToday, weeklyCompletions }: Progres
   const weekDates = getDatesOfWeek(new Date());
 
   const weeklyStatus = weekDates.map(date => {
-    const dateStr = date.toISOString().split('T')[0];
+    const dateStr = format(date, 'yyyy-MM-dd');
     const isCompleted = weeklyCompletions.some(comp => comp.date === dateStr);
     return {
       date: dateStr,
