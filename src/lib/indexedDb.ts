@@ -10,7 +10,7 @@ let db: IDBDatabase | null = null;
 const openDatabase = (): Promise<IDBDatabase | null> => {
   return new Promise((resolve) => {
     if (typeof window === 'undefined' || !window.indexedDB) {
-      // console.warn('IndexedDB is not available in this environment.');
+      console.warn('IndexedDB is not available in this environment.');
       resolve(null); // Resolve with null if IndexedDB is not available
       return;
     }
@@ -45,7 +45,7 @@ export const saveState = async (state: StoreState): Promise<void> => {
   try {
     const database = await openDatabase();
     if (!database) {
-      // console.warn('Cannot save state: IndexedDB not available.');
+      console.warn('Cannot save state: IndexedDB not available.');
       return; // Do nothing if DB is not available
     }
     const transaction = database.transaction([STORE_NAME], 'readwrite');
@@ -53,7 +53,7 @@ export const saveState = async (state: StoreState): Promise<void> => {
     const request = objectStore.put(state, 'currentState');
 
     request.onsuccess = () => {
-      // console.log('State saved to IndexedDB');
+      console.log('State saved to IndexedDB');
     };
 
     request.onerror = (event) => {
@@ -68,7 +68,7 @@ export const loadState = async (): Promise<StoreState | null> => {
   try {
     const database = await openDatabase();
     if (!database) {
-      // console.warn('Cannot load state: IndexedDB not available.');
+      console.warn('Cannot load state: IndexedDB not available.');
       return null; // Return null if DB is not available
     }
     const transaction = database.transaction([STORE_NAME], 'readonly');
@@ -77,7 +77,9 @@ export const loadState = async (): Promise<StoreState | null> => {
 
     return new Promise((resolve) => {
       request.onsuccess = (event) => {
-        resolve((event.target as IDBRequest).result as StoreState | null);
+        const loadedData = (event.target as IDBRequest).result as StoreState | null;
+        console.log('State loaded from IndexedDB:', loadedData);
+        resolve(loadedData);
       };
 
       request.onerror = (event) => {
@@ -90,3 +92,4 @@ export const loadState = async (): Promise<StoreState | null> => {
     return null;
   }
 };
+

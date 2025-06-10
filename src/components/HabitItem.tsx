@@ -9,7 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter }
 import { ProgressDisplay } from './ProgressDisplay';
 import { InsightsDialog } from './InsightsDialog';
 import { EditHabitDialog } from './EditHabitDialog';
-import { deleteHabitAction, toggleHabitCompletionAction, updateHabitAction } from '@/lib/actions';
+import { deleteHabitActionClient, toggleHabitCompletionActionClient, updateHabitActionClient } from '@/lib/client-actions'; // Updated imports
 import { useToast } from '@/hooks/use-toast';
 import { getTodayDateString } from '@/lib/dateUtils';
 import { Bell, Edit3, Trash2, Check, X, Loader2 } from 'lucide-react';
@@ -50,7 +50,7 @@ export function HabitItem({ habit, onDataChange }: HabitItemProps) {
     setIsLoadingToggle(true);
     try {
       const today = getTodayDateString();
-      const result = await toggleHabitCompletionAction(habit.id, today);
+      const result = await toggleHabitCompletionActionClient(habit.id, today); // Using client action
       setIsCompleted(result.completed);
       toast({
         title: result.completed ? 'Habit Marked Complete!' : 'Habit Marked Incomplete',
@@ -60,7 +60,7 @@ export function HabitItem({ habit, onDataChange }: HabitItemProps) {
       onDataChange(); // Refresh list as completion data changed
     } catch (error) {
       toast({ title: 'Error', description: 'Failed to update habit completion.', variant: 'destructive' });
-      setIsCompleted(!isCompleted);
+      setIsCompleted(!isCompleted); // Revert optimistic update on error
     } finally {
       setIsLoadingToggle(false);
     }
@@ -69,7 +69,7 @@ export function HabitItem({ habit, onDataChange }: HabitItemProps) {
   const handleDeleteHabit = async () => {
     setIsLoadingDelete(true);
     try {
-      await deleteHabitAction(habit.id);
+      await deleteHabitActionClient(habit.id); // Using client action
       toast({ title: 'Habit Deleted', description: `"${habit.name}" has been removed.`, variant: 'default' });
       onDataChange(); // Notify parent to refresh list
     } catch (error) {
@@ -85,7 +85,7 @@ export function HabitItem({ habit, onDataChange }: HabitItemProps) {
 
   const saveReminder = async () => {
     try {
-      await updateHabitAction(habit.id, habit.name, reminder);
+      await updateHabitActionClient(habit.id, habit.name, reminder); // Using client action
       toast({ title: 'Reminder Updated', description: `Reminder for "${habit.name}" set to ${reminder || 'none'}.`});
       setIsEditingReminder(false);
       onDataChange(); // Notify parent to refresh list
@@ -153,7 +153,7 @@ export function HabitItem({ habit, onDataChange }: HabitItemProps) {
         </div>
       </CardContent>
       <CardFooter className="flex flex-col sm:flex-row justify-between items-center space-y-2 sm:space-y-0 sm:space-x-2 pt-4 border-t">
-        <InsightsDialog habit={habit} />
+        <InsightsDialog habit={habit} /> {/* Stays with server action */}
         <div className="flex space-x-2">
           <EditHabitDialog habit={habit} onEditSuccess={onDataChange}>
             <Button variant="outline" size="sm">

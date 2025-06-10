@@ -1,9 +1,10 @@
+
 'use client';
 
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
-import { exportHabitDataAction } from '@/lib/actions';
+import { exportHabitDataAction } from '@/lib/actions'; // Stays as server action
 import { Download, Loader2 } from 'lucide-react';
 
 export function DataExportButton() {
@@ -13,9 +14,10 @@ export function DataExportButton() {
   const handleExport = async () => {
     setIsExporting(true);
     try {
-      const csvData = await exportHabitDataAction();
+      const csvData = await exportHabitDataAction(); // This is a server action
       if (csvData === "No data to export.") {
         toast({ title: 'Export Info', description: csvData, variant: 'default' });
+        setIsExporting(false); // Ensure loader stops
         return;
       }
 

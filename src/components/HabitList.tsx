@@ -6,7 +6,7 @@ import { HabitItem } from './HabitItem';
 import Image from 'next/image';
 import React, { useEffect, useState } from 'react';
 import { initializeClientStore } from '@/lib/store';
-import { getHabitsWithProgress } from '@/lib/actions';
+import { getHabitsWithProgressClient } from '@/lib/client-actions'; // Updated import
 import { Skeleton } from './ui/skeleton';
 import { Card } from './ui/card';
 
@@ -41,7 +41,7 @@ export function HabitList({ onDataChange }: HabitListProps) {
     async function loadAndFetchHabits() {
       setIsLoading(true); 
       await initializeClientStore(); 
-      const fetchedHabits = await getHabitsWithProgress(); 
+      const fetchedHabits = await getHabitsWithProgressClient(); // Using client action
       setHabits(fetchedHabits);
       setIsLoading(false);
     }

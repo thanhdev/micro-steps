@@ -3,7 +3,7 @@
 
 import React, { useEffect, useState } from 'react';
 import Image from 'next/image';
-import { getHabitsWithProgress } from '@/lib/actions';
+import { getHabitsWithProgressClient } from '@/lib/client-actions'; // Updated import
 import type { HabitWithProgress } from '@/lib/types';
 import { Skeleton } from './ui/skeleton';
 import { Card } from './ui/card';
@@ -15,16 +15,13 @@ export function ClientOnlyMotivationalSection() {
 
   useEffect(() => {
     async function fetchUserHabits() {
-      // Assuming initializeClientStore is already called by HabitList or a global wrapper
-      // If HabitList might not be on the page, initializeClientStore could be called here too,
-      // but it's guarded against multiple initializations.
-      const userHabits = await getHabitsWithProgress();
+      // initializeClientStore is already called by HabitList or a global wrapper
+      const userHabits = await getHabitsWithProgressClient(); // Using client action
       setHabits(userHabits);
       setIsLoading(false);
     }
     // Delay slightly to ensure HabitList's initialization runs first if both are on page
     // Or, use a shared context/event for store initialization status.
-    // For now, simple fetch.
     const timer = setTimeout(() => {
         fetchUserHabits();
     }, 100); // Small delay, not ideal but simple for now.

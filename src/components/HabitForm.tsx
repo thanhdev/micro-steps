@@ -1,3 +1,4 @@
+
 'use client';
 
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -14,7 +15,7 @@ import {
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
-import { addHabitAction, updateHabitAction } from '@/lib/actions';
+import { addHabitActionClient, updateHabitActionClient } from '@/lib/client-actions'; // Updated import
 import type { Habit } from '@/lib/types';
 import { Loader2 } from 'lucide-react';
 import React from 'react';
@@ -47,8 +48,8 @@ export function HabitForm({ habit, onSuccess }: HabitFormProps) {
     setIsSubmitting(true);
     try {
       const result = habit
-        ? await updateHabitAction(habit.id, values.name, values.reminderTime)
-        : await addHabitAction(values.name, values.reminderTime);
+        ? await updateHabitActionClient(habit.id, values.name, values.reminderTime) // Using client action
+        : await addHabitActionClient(values.name, values.reminderTime); // Using client action
 
       if (result.error) {
         toast({ title: 'Error', description: result.error, variant: 'destructive' });

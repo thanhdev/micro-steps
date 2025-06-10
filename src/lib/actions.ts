@@ -1,72 +1,12 @@
+
 'use server';
 
-import { revalidatePath } from 'next/cache';
 import {
-  addHabitStore,
-  deleteHabitStore,
   getAllHabits,
   getCompletionsForHabit,
-  toggleHabitCompletionStore,
-  updateHabitStore,
-  getWeeklyCompletions,
-  getCompletionsForHabitAndDate,
   getAllCompletionsData
 } from './store';
-import type { Habit, HabitCompletion, HabitWithProgress } from './types';
 import { generateHabitInsights, HabitInsightsInput } from '@/ai/flows/habit-insights';
-import { getTodayDateString } from './dateUtils';
-
-export async function getHabitsWithProgress(): Promise<HabitWithProgress[]> {
-  const habits = await getAllHabits();
-  const today = getTodayDateString();
-  const habitsWithProgress: HabitWithProgress[] = [];
-
-  for (const habit of habits) {
-    const completionsToday = !!(await getCompletionsForHabitAndDate(habit.id, today));
-    const weeklyCompletions = await getWeeklyCompletions(habit.id, new Date());
-    const allCompletions = await getCompletionsForHabit(habit.id);
-    habitsWithProgress.push({
-      ...habit,
-      completionsToday,
-      weeklyCompletions,
-      allCompletions,
-    });
-  }
-  return habitsWithProgress;
-}
-
-export async function addHabitAction(name: string, reminderTime?: string) {
-  if (!name.trim()) {
-    return { error: 'Habit name cannot be empty.' };
-  }
-  await addHabitStore(name, reminderTime);
-  revalidatePath('/');
-  return { success: 'Habit added successfully.' };
-}
-
-export async function updateHabitAction(habitId: string, name: string, reminderTime?: string) {
-  if (!name.trim()) {
-    return { error: 'Habit name cannot be empty.' };
-  }
-  const updated = await updateHabitStore(habitId, name, reminderTime);
-  if (!updated) {
-    return { error: 'Failed to update habit.' };
-  }
-  revalidatePath('/');
-  return { success: 'Habit updated successfully.' };
-}
-
-export async function deleteHabitAction(habitId: string) {
-  await deleteHabitStore(habitId);
-  revalidatePath('/');
-  return { success: 'Habit deleted successfully.' };
-}
-
-export async function toggleHabitCompletionAction(habitId: string, date: string): Promise<{ completed: boolean }> {
-  const completed = await toggleHabitCompletionStore(habitId, date);
-  revalidatePath('/');
-  return { completed };
-}
 
 export async function getAIHabitInsightsAction(habitId: string, habitName: string) {
   const completions = await getCompletionsForHabit(habitId);
@@ -91,15 +31,40 @@ export async function getAIHabitInsightsAction(habitId: string, habitName: strin
 }
 
 export async function exportHabitDataAction(): Promise<string> {
-  const data = await getAllCompletionsData();
-  if (data.length === 0) {
+  const habits = await getAllHabits(); // Used to get habit names
+  const allData = await getAllCompletionsData(); // This gets all completion records
+
+  if (allData.length === 0 && habits.length === 0) {
     return "No data to export.";
   }
   
+  // Create a map of habitId to habitName for easy lookup
+  const habitNameMap = new Map(habits.map(h => [h.id, h.name]));
+
   const csvHeader = "Habit Name,Date,Completed\n";
-  const csvRows = data
-    .map(item => `"${item.habitName.replace(/"/g, '""')}",${item.date},${item.completed}`)
+  const csvRows = allData
+    .map(item => {
+      // item from getAllCompletionsData already includes habitName
+      const habitName = item.habitName || habitNameMap.get(item.habitId) || "Unknown Habit";
+      return `"${habitName.replace(/"/g, '""')}",${item.date},${item.completed ? 'Yes' : 'No'}`;
+    })
     .join("\n");
   
-  return csvHeader + csvRows;
+  // Handle habits that might exist but have no completions
+  const habitsWithNoCompletions = habits.filter(h => !allData.some(d => d.habitId === h.id));
+  const noCompletionRows = habitsWithNoCompletions
+    .map(h => `"${h.name.replace(/"/g, '""')}",N/A,No`)
+    .join("\n");
+
+  let finalCsv = csvHeader + csvRows;
+  if (noCompletionRows) {
+    finalCsv += (csvRows ? "\n" : "") + noCompletionRows;
+  }
+  
+  if (finalCsv === csvHeader) { // Only header means no actual data rows were generated
+     return "No data to export.";
+  }
+
+  return finalCsv;
 }
+
