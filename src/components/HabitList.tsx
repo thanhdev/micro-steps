@@ -29,15 +29,19 @@ function CardSkeleton() {
   );
 }
 
-export function HabitList() {
+interface HabitListProps {
+  onDataChange: () => void;
+}
+
+export function HabitList({ onDataChange }: HabitListProps) {
   const [habits, setHabits] = useState<HabitWithProgress[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     async function loadAndFetchHabits() {
-      setIsLoading(true); // Ensure loading state is true at start
-      await initializeClientStore(); // Initialize store from IndexedDB
-      const fetchedHabits = await getHabitsWithProgress(); // Re-fetch habits
+      setIsLoading(true); 
+      await initializeClientStore(); 
+      const fetchedHabits = await getHabitsWithProgress(); 
       setHabits(fetchedHabits);
       setIsLoading(false);
     }
@@ -74,7 +78,7 @@ export function HabitList() {
   return (
     <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 mt-8">
       {habits.map(habit => (
-        <HabitItem key={habit.id} habit={habit} />
+        <HabitItem key={habit.id} habit={habit} onDataChange={onDataChange} />
       ))}
     </div>
   );

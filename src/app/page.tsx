@@ -1,7 +1,7 @@
 
-'use client'; // Add 'use client' because we are introducing useState
+'use client'; 
 
-import React, { useState } from 'react'; // Import useState
+import React, { useState } from 'react';
 import { AppHeader } from '@/components/AppHeader';
 import { AddHabitDialog } from '@/components/AddHabitDialog';
 import { HabitList } from '@/components/HabitList';
@@ -11,7 +11,7 @@ import { ClientOnlyMotivationalSection } from '@/components/ClientOnlyMotivation
 export default function HomePage() {
   const [habitsVersion, setHabitsVersion] = useState(0);
 
-  const handleHabitAdded = () => {
+  const handleDataChange = () => {
     setHabitsVersion(prevVersion => prevVersion + 1);
   };
 
@@ -25,13 +25,13 @@ export default function HomePage() {
           </h2>
           <div className="flex space-x-3">
             <DataExportButton />
-            <AddHabitDialog onHabitAdded={handleHabitAdded} /> {/* Pass the callback */}
+            <AddHabitDialog onHabitAdded={handleDataChange} />
           </div>
         </div>
 
-        <HabitList key={`habit-list-${habitsVersion}`} /> {/* Add key prop */}
+        <HabitList key={`habit-list-${habitsVersion}`} onDataChange={handleDataChange} />
         
-        <ClientOnlyMotivationalSection key={`motivational-section-${habitsVersion}`} /> {/* Add key prop */}
+        <ClientOnlyMotivationalSection key={`motivational-section-${habitsVersion}`} />
       </main>
       <footer className="py-6 text-center text-sm text-muted-foreground border-t border-border/50">
         <p>&copy; {new Date().getFullYear()} Micro Steps. All rights reserved.</p>
@@ -40,6 +40,3 @@ export default function HomePage() {
     </div>
   );
 }
-
-// Ensure revalidation occurs as needed, e.g., after actions
-// export const revalidate = 0; // This is not needed for a 'use client' component's dynamic behavior like this

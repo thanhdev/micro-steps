@@ -1,3 +1,4 @@
+
 'use client';
 
 import React from 'react';
@@ -29,9 +30,10 @@ import {
 
 interface HabitItemProps {
   habit: HabitWithProgress;
+  onDataChange: () => void; // Callback to notify parent of data mutation
 }
 
-export function HabitItem({ habit }: HabitItemProps) {
+export function HabitItem({ habit, onDataChange }: HabitItemProps) {
   const { toast } = useToast();
   const [isCompleted, setIsCompleted] = React.useState(habit.completionsToday);
   const [isLoadingToggle, setIsLoadingToggle] = React.useState(false);
@@ -55,9 +57,9 @@ export function HabitItem({ habit }: HabitItemProps) {
         description: `"${habit.name}" for today.`,
         variant: 'default',
       });
+      onDataChange(); // Refresh list as completion data changed
     } catch (error) {
       toast({ title: 'Error', description: 'Failed to update habit completion.', variant: 'destructive' });
-      // Revert UI change if API call fails
       setIsCompleted(!isCompleted);
     } finally {
       setIsLoadingToggle(false);
@@ -69,7 +71,7 @@ export function HabitItem({ habit }: HabitItemProps) {
     try {
       await deleteHabitAction(habit.id);
       toast({ title: 'Habit Deleted', description: `"${habit.name}" has been removed.`, variant: 'default' });
-      // Parent component will re-render list, so no local state change needed here for removal
+      onDataChange(); // Notify parent to refresh list
     } catch (error) {
       toast({ title: 'Error', description: 'Failed to delete habit.', variant: 'destructive' });
     } finally {
@@ -86,6 +88,7 @@ export function HabitItem({ habit }: HabitItemProps) {
       await updateHabitAction(habit.id, habit.name, reminder);
       toast({ title: 'Reminder Updated', description: `Reminder for "${habit.name}" set to ${reminder || 'none'}.`});
       setIsEditingReminder(false);
+      onDataChange(); // Notify parent to refresh list
     } catch (error) {
       toast({ title: 'Error', description: 'Failed to update reminder.', variant: 'destructive' });
     }
@@ -152,7 +155,7 @@ export function HabitItem({ habit }: HabitItemProps) {
       <CardFooter className="flex flex-col sm:flex-row justify-between items-center space-y-2 sm:space-y-0 sm:space-x-2 pt-4 border-t">
         <InsightsDialog habit={habit} />
         <div className="flex space-x-2">
-          <EditHabitDialog habit={habit}>
+          <EditHabitDialog habit={habit} onEditSuccess={onDataChange}>
             <Button variant="outline" size="sm">
               <Edit3 className="mr-2 h-4 w-4" /> Edit
             </Button>

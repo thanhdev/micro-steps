@@ -1,3 +1,4 @@
+
 'use client';
 
 import React from 'react';
@@ -16,10 +17,16 @@ import { Pencil } from 'lucide-react';
 interface EditHabitDialogProps {
   habit: Habit;
   children: React.ReactNode; // Trigger element
+  onEditSuccess?: () => void; // Callback for successful edit
 }
 
-export function EditHabitDialog({ habit, children }: EditHabitDialogProps) {
+export function EditHabitDialog({ habit, children, onEditSuccess }: EditHabitDialogProps) {
   const [isOpen, setIsOpen] = React.useState(false);
+
+  const handleSuccess = () => {
+    setIsOpen(false);
+    onEditSuccess?.(); // Call the callback if it exists
+  };
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
@@ -28,7 +35,7 @@ export function EditHabitDialog({ habit, children }: EditHabitDialogProps) {
         <DialogHeader>
           <DialogTitle>Edit Habit</DialogTitle>
         </DialogHeader>
-        <HabitForm habit={habit} onSuccess={() => setIsOpen(false)} />
+        <HabitForm habit={habit} onSuccess={handleSuccess} />
       </DialogContent>
     </Dialog>
   );
