@@ -53,8 +53,8 @@ export async function updateHabitStore(habitId: string, name: string, reminderTi
   if (habitIndex === -1) return null;
   const updatedHabit = { ...getStore().habits[habitIndex], name, reminderTime: reminderTime ?? undefined };
   getStore().habits[habitIndex] = updatedHabit;
-  return updatedHabit;
   await saveState(getStore());
+  return updatedHabit;
 }
 
 export async function deleteHabitStore(habitId: string): Promise<void> {
