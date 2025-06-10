@@ -1,3 +1,4 @@
+
 'use client';
 
 import React from 'react';
@@ -12,8 +13,17 @@ import {
 import { HabitForm } from './HabitForm';
 import { PlusCircle } from 'lucide-react';
 
-export function AddHabitDialog() {
+interface AddHabitDialogProps {
+  onHabitAdded?: () => void; // Define the new prop
+}
+
+export function AddHabitDialog({ onHabitAdded }: AddHabitDialogProps) { // Destructure the prop
   const [isOpen, setIsOpen] = React.useState(false);
+
+  const handleSuccess = () => {
+    setIsOpen(false);
+    onHabitAdded?.(); // Call the callback if it exists
+  };
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
@@ -27,7 +37,7 @@ export function AddHabitDialog() {
         <DialogHeader>
           <DialogTitle>Add a New Micro Habit</DialogTitle>
         </DialogHeader>
-        <HabitForm onSuccess={() => setIsOpen(false)} />
+        <HabitForm onSuccess={handleSuccess} /> {/* Pass the combined success handler */}
       </DialogContent>
     </Dialog>
   );
