@@ -1,13 +1,11 @@
+
 import { AppHeader } from '@/components/AppHeader';
 import { AddHabitDialog } from '@/components/AddHabitDialog';
 import { HabitList } from '@/components/HabitList';
 import { DataExportButton } from '@/components/DataExportButton';
-import { getHabitsWithProgress } from '@/lib/actions';
-import Image from 'next/image';
+import { ClientOnlyMotivationalSection } from '@/components/ClientOnlyMotivationalSection';
 
 export default async function HomePage() {
-  const habits = await getHabitsWithProgress();
-
   return (
     <div className="min-h-screen flex flex-col bg-background">
       <AppHeader />
@@ -22,29 +20,9 @@ export default async function HomePage() {
           </div>
         </div>
 
-        <HabitList habits={habits} />
+        <HabitList /> {/* HabitList will now fetch its own data on the client */}
         
-        {habits.length > 0 && (
-          <section className="mt-12 p-6 bg-card rounded-lg shadow-md">
-            <div className="flex flex-col md:flex-row items-center gap-6">
-              {/* <Image 
-                src="https://placehold.co/200x150.png" 
-                alt="Motivational visual" 
-                width={200} 
-                height={150} 
-                className="rounded-lg object-cover"
-                data-ai-hint="growth plant"
-              /> */}
-              <div>
-                <h3 className="text-xl font-headline font-semibold text-primary mb-2">Keep Up The Great Work!</h3>
-                <p className="text-muted-foreground">
-                  Each small step you take contributes to significant progress over time. Consistency is key to building lasting habits.
-                  Use the "Get Insights" feature on your habits to find personalized tips and stay motivated!
-                </p>
-              </div>
-            </div>
-          </section>
-        )}
+        <ClientOnlyMotivationalSection /> {/* This section will also load its data client-side */}
       </main>
       <footer className="py-6 text-center text-sm text-muted-foreground border-t border-border/50">
         <p>&copy; {new Date().getFullYear()} Micro Steps. All rights reserved.</p>

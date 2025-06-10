@@ -1,4 +1,5 @@
-import { StoreState } from './types';
+
+import type { StoreState } from './types';
 
 const DB_NAME = 'microsteps-db';
 const STORE_NAME = 'store';
@@ -6,8 +7,14 @@ const DB_VERSION = 1;
 
 let db: IDBDatabase | null = null;
 
-const openDatabase = (): Promise<IDBDatabase> => {
-  return new Promise((resolve, reject) => {
+const openDatabase = (): Promise<IDBDatabase | null> => {
+  return new Promise((resolve) => {
+    if (typeof window === 'undefined' || !window.indexedDB) {
+      // console.warn('IndexedDB is not available in this environment.');
+      resolve(null); // Resolve with null if IndexedDB is not available
+      return;
+    }
+
     if (db) {
       resolve(db);
       return;
@@ -16,8 +23,10 @@ const openDatabase = (): Promise<IDBDatabase> => {
     const request = indexedDB.open(DB_NAME, DB_VERSION);
 
     request.onupgradeneeded = (event) => {
-      const db = (event.target as IDBOpenDBRequest).result;
-      db.createObjectStore(STORE_NAME);
+      const dbInstance = (event.target as IDBOpenDBRequest).result;
+      if (!dbInstance.objectStoreNames.contains(STORE_NAME)) {
+        dbInstance.createObjectStore(STORE_NAME);
+      }
     };
 
     request.onsuccess = (event) => {
@@ -26,8 +35,8 @@ const openDatabase = (): Promise<IDBDatabase> => {
     };
 
     request.onerror = (event) => {
-      reject('Error opening IndexedDB');
       console.error('IndexedDB error:', (event.target as IDBOpenDBRequest).error);
+      resolve(null); // Resolve with null on error too, or reject if preferred
     };
   });
 };
@@ -35,6 +44,10 @@ const openDatabase = (): Promise<IDBDatabase> => {
 export const saveState = async (state: StoreState): Promise<void> => {
   try {
     const database = await openDatabase();
+    if (!database) {
+      // console.warn('Cannot save state: IndexedDB not available.');
+      return; // Do nothing if DB is not available
+    }
     const transaction = database.transaction([STORE_NAME], 'readwrite');
     const objectStore = transaction.objectStore(STORE_NAME);
     const request = objectStore.put(state, 'currentState');
@@ -54,18 +67,22 @@ export const saveState = async (state: StoreState): Promise<void> => {
 export const loadState = async (): Promise<StoreState | null> => {
   try {
     const database = await openDatabase();
+    if (!database) {
+      // console.warn('Cannot load state: IndexedDB not available.');
+      return null; // Return null if DB is not available
+    }
     const transaction = database.transaction([STORE_NAME], 'readonly');
     const objectStore = transaction.objectStore(STORE_NAME);
     const request = objectStore.get('currentState');
 
-    return new Promise((resolve, reject) => {
+    return new Promise((resolve) => {
       request.onsuccess = (event) => {
         resolve((event.target as IDBRequest).result as StoreState | null);
       };
 
       request.onerror = (event) => {
         console.error('Error loading state from IndexedDB:', (event.target as IDBRequest).error);
-        reject('Error loading state from IndexedDB');
+        resolve(null); // Resolve with null on error
       };
     });
   } catch (error) {
