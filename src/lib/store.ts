@@ -10,13 +10,6 @@ let storeInstance: StoreState = {
 
 let clientStoreInitialized = false;
 
-// Default habits to populate if IndexedDB is empty on first client load
-const defaultInitialHabits: Habit[] = [
-  { id: '1', name: 'Wake up on time', createdAt: new Date().toISOString(), reminderTime: '06:00' },
-  { id: '2', name: 'Exercise for 1 minute', createdAt: new Date().toISOString(), reminderTime: '06:30' },
-  { id: '3', name: 'Read 10 pages of a book', createdAt: new Date().toISOString(), reminderTime: '20:00' },
-];
-
 // This function should ONLY be called on the client-side.
 export async function initializeClientStore(): Promise<void> {
   if (typeof window === 'undefined' || clientStoreInitialized) {
@@ -30,7 +23,7 @@ export async function initializeClientStore(): Promise<void> {
   } else {
     console.log("No valid state in IndexedDB or empty habits, setting default initial habits.");
     storeInstance = {
-      habits: [...defaultInitialHabits.map(h => ({...h, createdAt: new Date().toISOString()}))], // Ensure fresh createdAt
+      habits: [],
       completions: [],
     };
     await saveState(storeInstance); // Save the default state
